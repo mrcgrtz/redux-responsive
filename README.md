@@ -283,7 +283,8 @@ Requires Node 26 or newer.
 ```sh
 npm install
 npm test           # run the tests (node:test, straight from the TypeScript sources)
-npm run check      # typecheck, lint, format check and tests
+npm run check      # typecheck, lint (XO) and tests
+npm run format     # fix lint and formatting issues
 npm run dev        # start the example app
 npm run build      # emit dist/
 ```

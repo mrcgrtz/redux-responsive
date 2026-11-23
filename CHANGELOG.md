@@ -33,7 +33,7 @@ A full modernization for Redux 5, React 19 and current tooling. See the migratio
 ### Tooling
 
 - TypeScript sources, built with `tsc`; tests run on `node:test` directly from the sources.
-- ESLint 10 (flat config), Prettier 3, Vite for the example app, GitHub Actions for CI.
+- XO for linting and formatting, husky and lint-staged for pre-commit fixes, Vite for the example app, GitHub Actions for CI (tests, npm publishing with provenance, Dependabot auto-merge).
 - Removed Babel 6, webpack 2, Jest 19, dtslint and Travis CI. Coverage from the built-in test runner is reported to Coveralls.
 
 ### Migration guide
