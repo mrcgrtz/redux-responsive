@@ -2,26 +2,15 @@
     "name": "@mrcgrtz/redux-responsive",
     "version": "5.0.0",
     "description": "Utilities for easily creating responsive designs in a redux architecture.",
-    "keywords": [
-        "redux",
-        "react",
-        "responsive",
-        "media-queries",
-        "breakpoints"
-    ],
     "license": "MIT",
+    "repository": "github:mrcgrtz/redux-responsive",
+    "homepage": "https://github.com/mrcgrtz/redux-responsive#readme",
+    "bugs": "https://github.com/mrcgrtz/redux-responsive/issues",
     "author": "Alec Aivazis",
     "contributors": [
         "Marc Görtz <mail@marcgoertz.de> (https://marcgoertz.de/)"
     ],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mrcgrtz/redux-responsive.git"
-    },
-    "homepage": "https://github.com/mrcgrtz/redux-responsive#readme",
-    "bugs": "https://github.com/mrcgrtz/redux-responsive/issues",
     "type": "module",
-    "sideEffects": false,
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
@@ -33,36 +22,54 @@
         },
         "./package.json": "./package.json"
     },
-    "files": [
-        "dist"
-    ],
+    "sideEffects": false,
+    "engines": {
+        "node": ">=26"
+    },
     "publishConfig": {
         "access": "public",
         "provenance": true
-    },
-    "engines": {
-        "node": ">=26"
     },
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "clean": "rm -rf dist coverage",
         "dev": "vite example",
-        "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+        "check": "npm run typecheck && npm run lint && npm test",
         "typecheck": "tsc",
-        "lint": "eslint .",
-        "format": "prettier --write .",
-        "format:check": "prettier --check .",
+        "lint": "xo",
+        "format": "xo --fix",
         "test": "node --test 'src/**/*.test.ts'",
         "test:watch": "node --test --watch 'src/**/*.test.ts'",
         "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-exclude='src/**/*.test.ts' --test-coverage-lines=90 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info 'src/**/*.test.ts'",
-        "prepack": "npm run clean && npm run build"
+        "prepack": "npm run clean && npm run build",
+        "prepare": "husky"
     },
-    "prettier": {
-        "tabWidth": 4,
-        "semi": false,
-        "singleQuote": true,
-        "printWidth": 100,
-        "trailingComma": "es5"
+    "files": [
+        "dist"
+    ],
+    "keywords": [
+        "redux",
+        "react",
+        "responsive",
+        "media-queries",
+        "breakpoints"
+    ],
+    "devDependencies": {
+        "@reduxjs/toolkit": "^2.15.0",
+        "@types/node": "^26.6.6",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "eslint-plugin-react-hooks": "^7.1.1",
+        "husky": "^9.1.7",
+        "immutable": "^5.2.1",
+        "lint-staged": "^17.6.2",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1",
+        "react-redux": "^9.3.1",
+        "redux": "^5.0.1",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.8",
+        "xo": "^5.0.1"
     },
     "peerDependencies": {
         "react": "^19.0.0",
@@ -77,24 +84,7 @@
             "optional": true
         }
     },
-    "devDependencies": {
-        "@eslint/js": "^10.0.1",
-        "@reduxjs/toolkit": "^2.15.0",
-        "@types/node": "^26.6.6",
-        "@types/react": "^19.3.0",
-        "@types/react-dom": "^19.3.0",
-        "eslint": "^10.14.0",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-react-hooks": "^7.1.1",
-        "globals": "^17.14.0",
-        "immutable": "^5.2.1",
-        "prettier": "^3.10.1",
-        "react": "^19.3.1",
-        "react-dom": "^19.3.1",
-        "react-redux": "^9.3.1",
-        "redux": "^5.0.1",
-        "typescript": "~6.0.3",
-        "typescript-eslint": "^8.72.1",
-        "vite": "^8.3.8"
+    "lint-staged": {
+        "*.{js,ts,tsx,json,md,html}": "xo --fix"
     }
 }
