@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "es2023",
+        "lib": ["es2023", "dom", "dom.iterable"],
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "types": ["node"],
+        "jsx": "react-jsx",
+        "strict": true,
+        "noUncheckedIndexedAccess": false,
+        "noFallthroughCasesInSwitch": true,
+        "exactOptionalPropertyTypes": false,
+        "verbatimModuleSyntax": true,
+        "erasableSyntaxOnly": true,
+        "rewriteRelativeImportExtensions": true,
+        "isolatedModules": true,
+        "skipLibCheck": true,
+        "noEmit": true
+    },
+    "include": ["src", "example", "eslint.config.js", "vite.config.ts"]
+}

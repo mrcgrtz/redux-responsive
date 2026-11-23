@@ -1,1 +1,4 @@
-package.json
+dist
+coverage
+package-lock.json
+LICENSE.md
