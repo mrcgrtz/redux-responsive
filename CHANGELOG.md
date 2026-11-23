@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.0.1
+
+No changes to the library. First release published from GitHub Actions through npm trusted publishing, with [provenance](https://docs.npmjs.com/generating-provenance-statements).
+
 ## 5.0.0
 
 A full modernization for Redux 5, React 19 and current tooling. See the migration guide below.
