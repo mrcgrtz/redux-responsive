@@ -43,7 +43,12 @@ Wrapping components in responsive wrapper components quickly leads to boilerplat
 npm install @mrcgrtz/redux-responsive
 ```
 
-redux-responsive requires `redux@^5`. The React bindings additionally require `react@^19` and `react-redux@^9`.
+### Requirements
+
+- `redux@^5`; the React bindings additionally need `react@^19` and `react-redux@^9`
+- TypeScript 5.4 or newer, if you use the type definitions
+- Browsers supporting ES2023's `Array#findLast` (Chrome 97, Firefox 104, Safari 15.4), which covers browserslist's `defaults`
+- The package is ESM-only; CommonJS code can `require()` it in Node versions that support loading ES modules
 
 ## Setup
 

@@ -35,6 +35,23 @@ const xoConfig = [
 		},
 	},
 	{
+		// The library runs in the browser; browserslist's `defaults` still include Chrome 109,
+		// which lacks the ES2023 change-array-by-copy methods. Sorting freshly created arrays
+		// in place is safe.
+		files: ['src/**/*.ts'],
+		ignores: ['src/**/*.test.ts', 'src/**/*.test-d.ts', 'src/fake-window.ts'],
+		rules: {
+			'unicorn/no-array-sort': 'off',
+			'no-restricted-properties': [
+				'error',
+				...['toSorted', 'toReversed', 'toSpliced'].map(property => ({
+					property,
+					message: 'Not available in Chrome 109, which browserslist\'s `defaults` still include.',
+				})),
+			],
+		},
+	},
+	{
 		files: ['src/**/*.test.ts', 'src/**/*.test-d.ts', 'src/fake-window.ts', 'example/**'],
 		rules: {
 			// `describe` and `it` from `node:test` return promises the test runner awaits
@@ -63,10 +80,12 @@ const xoConfig = [
 		},
 	},
 	{
-		// `package.json` is always part of the package, the explicit export is for tooling
 		files: ['package.json'],
 		rules: {
+			// `package.json` is always part of the package, the explicit export is for tooling
 			'package-json/prefer-files-field': 'off',
+			// `types` and `typesVersions` are fallbacks for TypeScript's `node10` resolution
+			'package-json/prefer-exports': 'off',
 		},
 	},
 ];
