@@ -7,14 +7,20 @@
 A Redux reducer for managing the responsive state of your application.
 
 ```tsx
-import { useSelector } from 'react-redux'
+import {useSelector} from 'react-redux';
 
 function Greeting() {
-    const browser = useSelector((state: RootState) => state.browser)
+	const browser = useSelector((state: RootState) => state.browser);
 
-    if (browser.lessThan.small) return <p>Secret message for small viewports!</p>
-    if (browser.lessThan.medium) return <p>Between "small" and "medium".</p>
-    return <p>Wider than "medium".</p>
+	if (browser.lessThan.small) {
+		return <p>Secret message for small viewports!</p>;
+	}
+
+	if (browser.lessThan.medium) {
+		return <p>Between "small" and "medium".</p>;
+	}
+
+	return <p>Wider than "medium".</p>;
 }
 ```
 
@@ -46,40 +52,45 @@ Add the reducer to your root reducer (you can name the key whatever you want) an
 ### With Redux Toolkit
 
 ```ts
-import { configureStore } from '@reduxjs/toolkit'
-import { responsiveStateReducer, responsiveStoreEnhancer } from '@mrcgrtz/redux-responsive'
+import {configureStore} from '@reduxjs/toolkit';
+import {responsiveStateReducer, responsiveStoreEnhancer} from '@mrcgrtz/redux-responsive';
 
 export const store = configureStore({
-    reducer: {
-        browser: responsiveStateReducer,
-    },
-    enhancers: (getDefaultEnhancers) => getDefaultEnhancers().concat(responsiveStoreEnhancer),
-})
+	reducer: {
+		browser: responsiveStateReducer,
+	},
+	enhancers: getDefaultEnhancers => getDefaultEnhancers().concat(responsiveStoreEnhancer),
+});
 ```
 
 ### With plain Redux
 
 ```ts
-import { applyMiddleware, combineReducers, compose, legacy_createStore as createStore } from 'redux'
-import { responsiveStateReducer, responsiveStoreEnhancer } from '@mrcgrtz/redux-responsive'
+import {
+	applyMiddleware,
+	combineReducers,
+	compose,
+	legacy_createStore as createStore,
+	type StoreEnhancer,
+} from 'redux';
+import {responsiveStateReducer, responsiveStoreEnhancer} from '@mrcgrtz/redux-responsive';
 
-const reducer = combineReducers({ browser: responsiveStateReducer })
+const reducer = combineReducers({browser: responsiveStateReducer});
+// Redux's `compose` cannot infer enhancer types, so annotate the result
+const enhancer: StoreEnhancer = compose(responsiveStoreEnhancer, applyMiddleware(...middleware));
 
-export const store = createStore(
-    reducer,
-    compose(responsiveStoreEnhancer, applyMiddleware(...middleware))
-)
+export const store = createStore(reducer, enhancer);
 ```
 
 The default breakpoints match common device sizes:
 
 ```ts
 const defaultBreakpoints = {
-    extraSmall: 480,
-    small: 768,
-    medium: 992,
-    large: 1200,
-}
+	extraSmall: 480,
+	small: 768,
+	medium: 992,
+	large: 1200,
+};
 ```
 
 ## The responsive state
@@ -94,12 +105,12 @@ The reducer adds an object with the following keys to the store:
 - `breakpoints` (_object_): the breakpoints, including the infinity media type.
 
 ```ts
-const { browser } = store.getState()
+const {browser} = store.getState();
 
-browser.mediaType // e.g. 'large'
-browser.orientation // 'landscape'
-browser.greaterThan.medium // true if wider than the "medium" breakpoint
-browser.is.small // true if browser.mediaType === 'small'
+browser.mediaType; // For example 'large'
+browser.orientation; // 'landscape'
+browser.greaterThan.medium; // True if wider than the "medium" breakpoint
+browser.is.small; // True if browser.mediaType === 'small'
 ```
 
 All fields are fully typed: `browser.is.huge` is a type error unless `huge` is one of your breakpoints.
@@ -107,17 +118,17 @@ All fields are fully typed: `browser.is.huge` is a type error unless `huge` is o
 ## Custom breakpoints
 
 ```ts
-import { createResponsiveStateReducer } from '@mrcgrtz/redux-responsive'
+import {createResponsiveStateReducer} from '@mrcgrtz/redux-responsive';
 
 const browser = createResponsiveStateReducer({
-    extraSmall: 500,
-    small: 700,
-    medium: 1000,
-    large: 1280,
-    extraLarge: 1400,
-    // strings are used as custom media queries
-    print: 'print',
-})
+	extraSmall: 500,
+	small: 700,
+	medium: 1000,
+	large: 1280,
+	extraLarge: 1400,
+	// Strings are used as custom media queries
+	print: 'print',
+});
 ```
 
 ### The infinity media type
@@ -125,8 +136,8 @@ const browser = createResponsiveStateReducer({
 When the viewport is wider than the largest breakpoint, `mediaType` is `'infinity'`. To rename it, pass the `infinity` option:
 
 ```ts
-// null uses the default breakpoints
-const browser = createResponsiveStateReducer(null, { infinity: 'veryBig' })
+// Passing null uses the default breakpoints
+const browser = createResponsiveStateReducer(null, {infinity: 'veryBig'});
 ```
 
 ## Adding computed fields
@@ -135,15 +146,15 @@ Pass an `extraFields` function to add fields to the responsive state whenever it
 
 ```ts
 const browser = createResponsiveStateReducer(null, {
-    extraFields: ({ greaterThan, is }) => ({
-        greaterThanOrEqual: Object.fromEntries(
-            Object.entries(greaterThan).map(([mediaType, value]) => [
-                mediaType,
-                value || is[mediaType as keyof typeof is],
-            ])
-        ),
-    }),
-})
+	extraFields: ({greaterThan, is}) => ({
+		greaterThanOrEqual: Object.fromEntries(
+			Object.entries(greaterThan).map(([mediaType, value]) => [
+				mediaType,
+				value || is[mediaType as keyof typeof is],
+			]),
+		),
+	}),
+});
 ```
 
 ### Tracking window attributes
@@ -152,16 +163,16 @@ To track attributes such as the width, read them in `extraFields`:
 
 ```ts
 const browser = createResponsiveStateReducer(null, {
-    extraFields: () => ({ width: window.innerWidth }),
-})
+	extraFields: () => ({width: window.innerWidth}),
+});
 ```
 
 The enhancer only recalculates when the viewport crosses a breakpoint, **not on every resize**. Request a recalculation yourself when you need one:
 
 ```ts
-import { calculateResponsiveState } from '@mrcgrtz/redux-responsive'
+import {calculateResponsiveState} from '@mrcgrtz/redux-responsive';
 
-window.addEventListener('resize', () => store.dispatch(calculateResponsiveState()))
+window.addEventListener('resize', () => store.dispatch(calculateResponsiveState()));
 ```
 
 `calculateResponsiveState()` takes no window: the enhancer measures the window and attaches the result, so the action stays serializable.
@@ -171,25 +182,25 @@ window.addEventListener('resize', () => store.dispatch(calculateResponsiveState(
 Server-rendered markup must match the first client render. Disable the initial calculation so both use the default state:
 
 ```ts
-import { createResponsiveStoreEnhancer } from '@mrcgrtz/redux-responsive'
+import {createResponsiveStoreEnhancer} from '@mrcgrtz/redux-responsive';
 
-const enhancer = createResponsiveStoreEnhancer({ calculateInitialState: false })
+const enhancer = createResponsiveStoreEnhancer({calculateInitialState: false});
 ```
 
 Then request the calculation once the client has hydrated:
 
 ```tsx
-import { hydrateRoot } from 'react-dom/client'
-import { calculateResponsiveState } from '@mrcgrtz/redux-responsive'
+import {hydrateRoot} from 'react-dom/client';
+import {calculateResponsiveState} from '@mrcgrtz/redux-responsive';
 
 hydrateRoot(
-    document.getElementById('app')!,
-    <Provider store={store}>
-        <App />
-    </Provider>
-)
+	document.querySelector('#app')!,
+	<Provider store={store}>
+		<App />
+	</Provider>,
+);
 
-store.dispatch(calculateResponsiveState())
+store.dispatch(calculateResponsiveState());
 ```
 
 ### Setting the initial media type
@@ -197,7 +208,7 @@ store.dispatch(calculateResponsiveState())
 If you know the initial media type (e.g. from the user agent), set it on the reducer:
 
 ```ts
-const browser = createResponsiveStateReducer(null, { initialMediaType: 'small' })
+const browser = createResponsiveStateReducer(null, {initialMediaType: 'small'});
 ```
 
 ### Observing another window
@@ -205,7 +216,8 @@ const browser = createResponsiveStateReducer(null, { initialMediaType: 'small' }
 The enhancer observes `globalThis.window` by default. Pass any object with a `matchMedia` method to observe something else, such as an iframe's window:
 
 ```ts
-createResponsiveStoreEnhancer({ window: iframe.contentWindow })
+// `contentWindow` is only available once the iframe is attached to the document
+createResponsiveStoreEnhancer({window: iframe.contentWindow!});
 ```
 
 ## React bindings
@@ -213,7 +225,7 @@ createResponsiveStoreEnhancer({ window: iframe.contentWindow })
 Responsive styles often look like this:
 
 ```tsx
-<div style={browser.lessThan.medium ? styles.elementThin : styles.element} />
+	<div style={browser.lessThan.medium ? styles.elementThin : styles.element} />
 ```
 
 `@mrcgrtz/redux-responsive/react` lets you declare overrides inside the style instead, using keys of the form `_lessThan_<mediaType>`, `_greaterThan_<mediaType>` and `_equal_<mediaType>`. Overrides apply in this order: `lessThan` (largest to smallest), `greaterThan` (smallest to largest), then `equal`.
@@ -221,18 +233,18 @@ Responsive styles often look like this:
 ### `useResponsiveStyles`
 
 ```tsx
-import { useResponsiveStyles } from '@mrcgrtz/redux-responsive/react'
+import {useResponsiveStyles} from '@mrcgrtz/redux-responsive/react';
 
 const stylesheet = {
-    element: {
-        color: 'blue',
-        _lessThan_medium: { color: 'black' },
-    },
-}
+	element: {
+		color: 'blue',
+		_lessThan_medium: {color: 'black'},
+	},
+};
 
 function Component() {
-    const styles = useResponsiveStyles(stylesheet)
-    return <div style={styles.element} />
+	const styles = useResponsiveStyles(stylesheet);
+	return <div style={styles.element} />;
 }
 ```
 
@@ -240,30 +252,30 @@ The stylesheet can also be a function of the responsive state and props:
 
 ```tsx
 const styles = useResponsiveStyles(
-    (browser, props) => ({ element: { opacity: props.active ? 1 : 0.5 } }),
-    props
-)
+	(browser, props) => ({element: {opacity: props.active ? 1 : 0.5}}),
+	props,
+);
 ```
 
 If the responsive state is not stored under `browser`, pass a selector:
 
 ```tsx
 useResponsiveStyles(stylesheet, undefined, {
-    selectResponsiveState: (state: RootState) => state.screen,
-})
+	selectResponsiveState: (state: RootState) => state.screen,
+});
 ```
 
 ### `StyleSheet` higher-order component
 
-For existing class components, the `StyleSheet` HOC passes the resolved styles as the `styles` prop:
+For existing code, including class components, the `StyleSheet` HOC passes the resolved styles as the `styles` prop:
 
 ```tsx
-import { StyleSheet } from '@mrcgrtz/redux-responsive/react'
+import {StyleSheet} from '@mrcgrtz/redux-responsive/react';
 
-const Component = StyleSheet(stylesheet)(({ styles }) => <div style={styles.element} />)
+const Component = StyleSheet(stylesheet)(({styles}) => <div style={styles.element} />);
 
-// with a custom state key
-StyleSheet(stylesheet, { reducerName: 'screen' })
+// With a custom state key
+StyleSheet(stylesheet, {reducerName: 'screen'});
 ```
 
 ## redux-immutable
