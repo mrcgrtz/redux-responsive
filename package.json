@@ -1,6 +1,6 @@
 {
     "name": "@mrcgrtz/redux-responsive",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "description": "Utilities for easily creating responsive designs in a redux architecture.",
     "license": "MIT",
     "repository": "github:mrcgrtz/redux-responsive",
