@@ -26,7 +26,7 @@ const mapValues = <T, R>(object: Record<string, T>, f: (value: T, key: string) =
  * Custom (string) media queries are ordered after all numeric breakpoints.
  */
 export function getOrderMap(breakpoints: Breakpoints): Record<string, number> {
-	const keys = Object.keys(breakpoints).toSorted((a, b) => {
+	const keys = Object.keys(breakpoints).sort((a, b) => {
 		const valueA = breakpoints[a];
 		const valueB = breakpoints[b];
 

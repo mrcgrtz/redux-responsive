@@ -61,7 +61,7 @@ export function sortKeys(keys: readonly string[], breakpoints: readonly string[]
 
 	return keys
 		.map(key => ({key, rank: rank(key)}))
-		.toSorted((a, b) => a.rank - b.rank)
+		.sort((a, b) => a.rank - b.rank)
 		.map(({key}) => key);
 }
 
@@ -69,7 +69,7 @@ export function sortKeys(keys: readonly string[], breakpoints: readonly string[]
 export const transformStyle =
 	(browser: StyleSheetState) =>
 		(style: ResponsiveStyle): CSSProperties => {
-			const breakpoints = Object.keys(browser.breakpoints).toSorted(
+			const breakpoints = Object.keys(browser.breakpoints).sort(
 				(a, b) => browser.breakpoints[a] - browser.breakpoints[b],
 			);
 			const result: Record<string, unknown> = {};

@@ -7,7 +7,7 @@ import type {Breakpoints} from './types.ts';
 export function toMediaQueries(breakpoints: Breakpoints): Record<string, string> {
 	const ranges = Object.entries(breakpoints)
 		.filter((entry): entry is [string, number] => typeof entry[1] === 'number')
-		.toSorted(([, a], [, b]) => a - b);
+		.sort(([, a], [, b]) => a - b);
 
 	const queries: Record<string, string> = {};
 
