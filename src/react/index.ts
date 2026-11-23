@@ -36,7 +36,7 @@ const selectBrowser = (state: {browser: StyleSheetState}) => state.browser;
  * Resolves a responsive stylesheet against the responsive state in the store.
  *
  * @example
- * const styles = useResponsiveStyles({ box: { color: 'red', _lessThan_medium: { color: 'blue' } } })
+ * const styles = useResponsiveStyles({box: {color: 'red', _lessThan_medium: {color: 'blue'}}});
  */
 export function useResponsiveStyles<S extends ResponsiveStyleSheet, P = undefined>(
 	stylesheet: StyleSheetDefinition<S, P>,
