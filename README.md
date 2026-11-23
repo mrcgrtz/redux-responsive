@@ -1,124 +1,79 @@
-# redux-responsive
+# @mrcgrtz/redux-responsive
 
-[![Build Status](https://travis-ci.org/AlecAivazis/redux-responsive.svg?branch=master)](https://travis-ci.org/AlecAivazis/redux-responsive)
-[![Coverage Status](https://coveralls.io/repos/github/AlecAivazis/redux-responsive/badge.svg?branch=master)](https://coveralls.io/github/AlecAivazis/redux-responsive?branch=master)
-[![npm](https://img.shields.io/npm/v/redux-responsive.svg)](https://www.npmjs.com/package/redux-responsive)
+[![Test](https://github.com/mrcgrtz/redux-responsive/actions/workflows/test.yml/badge.svg)](https://github.com/mrcgrtz/redux-responsive/actions/workflows/test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/mrcgrtz/redux-responsive/badge.svg?branch=main)](https://coveralls.io/github/mrcgrtz/redux-responsive?branch=main)
+[![npm](https://img.shields.io/npm/v/@mrcgrtz/redux-responsive.svg)](https://www.npmjs.com/package/@mrcgrtz/redux-responsive)
 
-A redux reducer for managing the responsive state of your application.
+A Redux reducer for managing the responsive state of your application.
 
-## Example
+```tsx
+import { useSelector } from 'react-redux'
 
-```js
-// MyComponent.js
+function Greeting() {
+    const browser = useSelector((state: RootState) => state.browser)
 
-import React from 'react'
-import {connect} from 'react-redux'
-
-// grab only the responsive state from the store
-// (assuming you have put the `responsiveStateReducer` under
-//  the key `browser` in your state tree)
-function browserSelector({browser}) {
-    return {browser}
-}
-
-@connect(browserSelector)
-class MyComponent extends React.Component {
-    render() {
-        // grab the responsive state off of props
-        const {browser} = this.props
-
-        let message = `The viewport's current media type is: ${browser.mediaType}.`
-
-        if (browser.lessThan.small) {
-            message += 'Secret message for viewports smaller than than the "small" breakpoint!'
-        } else if (browser.lessThan.medium) {
-            message += 'Secret message for viewports between the "small" and "medium" breakpoints!'
-        } else {
-            message += 'Message for viewports greater than the "medium" breakpoint.'
-        }
-
-        return (
-            <p>
-                {message}
-            </p>
-        )
-    }
+    if (browser.lessThan.small) return <p>Secret message for small viewports!</p>
+    if (browser.lessThan.medium) return <p>Between "small" and "medium".</p>
+    return <p>Wider than "medium".</p>
 }
 ```
 
-## Why Store Responsive State in Redux?
+- Written in TypeScript, ships as ES modules with type definitions
+- Works with Redux 5 and Redux Toolkit; serializable actions only
+- Optional React 19 bindings (`useResponsiveStyles` hook and `StyleSheet` HOC)
+- Dispatches only when the viewport crosses a breakpoint or changes orientation
 
-redux-responsive **does not require that you use React as your view library**.  However, since that is what is commonly used alongside redux, this documentation employs common React patterns.
+> This is the maintained continuation of [`redux-responsive`](https://github.com/AlecAivazis/redux-responsive) by Alec Aivazis, which has been archived. Coming from `redux-responsive@4`? See the [migration guide](CHANGELOG.md#migration-guide).
 
-There are many solutions for cleanly handling responsive designs in React applications. One common approach is to wrap a component in another component which is responsible for handling the behavior and passing the information down as a prop. While this at first seems good and the "react way", as the behavior gets more complicated, this quickly leads to a lot of boilerplate code in a single component. Also, depending on the implementation, it is possible that many copies of the responsive wrapper would create many different resize handlers.
+## Why store responsive state in Redux?
 
-Using a specialized store not only reduces the overall noise in a component, but also guarantees that only a single event listener is listening for resize.
+redux-responsive **does not require React**, but it is commonly used with it.
 
+Wrapping components in responsive wrapper components quickly leads to boilerplate, and many copies of such a wrapper may register many resize handlers. Keeping the responsive state in the store reduces noise in components and guarantees a single set of listeners, built on [`MediaQueryList`](https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList) so the store is only updated when needed.
+
+## Installation
+
+```sh
+npm install @mrcgrtz/redux-responsive
+```
+
+redux-responsive requires `redux@^5`. The React bindings additionally require `react@^19` and `react-redux@^9`.
 
 ## Setup
 
-First, add the reducer to the root of your reducer tree (you can name it whatever you want).
+Add the reducer to your root reducer (you can name the key whatever you want) and add the store enhancer, which keeps the state in sync with the window.
 
-```js
-// reducer.js
-import {combineReducers} from 'redux'
-import {responsiveStateReducer} from 'redux-responsive'
+### With Redux Toolkit
 
-export default combineReducers({
-    browser: responsiveStateReducer,
+```ts
+import { configureStore } from '@reduxjs/toolkit'
+import { responsiveStateReducer, responsiveStoreEnhancer } from '@mrcgrtz/redux-responsive'
+
+export const store = configureStore({
+    reducer: {
+        browser: responsiveStateReducer,
+    },
+    enhancers: (getDefaultEnhancers) => getDefaultEnhancers().concat(responsiveStoreEnhancer),
 })
 ```
 
-Second, you must add required event handlers to keep the responsive state up to date. `redux-responsive` uses
-[MediaQueryList](https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList)s to efficiently update the
-store only when required. To do this, use the provided store enhancer.
+### With plain Redux
 
-```js
-// store.js
+```ts
+import { applyMiddleware, combineReducers, compose, legacy_createStore as createStore } from 'redux'
+import { responsiveStateReducer, responsiveStoreEnhancer } from '@mrcgrtz/redux-responsive'
 
-import {createStore} from 'redux'
-import {responsiveStoreEnhancer} from 'redux-responsive'
-import reducer from './reducer'
+const reducer = combineReducers({ browser: responsiveStateReducer })
 
-const store = createStore(reducer, responsiveStoreEnhancer)
-
-// or, if you have an initial state for the store
-const store = createStore(reducer, initialState, responsiveStoreEnhancer)
-
-export default store
+export const store = createStore(
+    reducer,
+    compose(responsiveStoreEnhancer, applyMiddleware(...middleware))
+)
 ```
 
-Note that if you are also using some [middlewares](http://redux.js.org/docs/advanced/Middleware.html), the call will look more like this:
+The default breakpoints match common device sizes:
 
-```js
-import {createStore, applyMiddleware, compose} from 'redux'
-import {responsiveStoreEnhancer} from 'redux-responsive'
-import reducer from './reducer'
-
-const store = createStore(
-    reducer,
-    compose(
-        responsiveStoreEnhancer,
-        applyMiddleware(middleware1, middleware2)
-    )
-)
-
-// or, if you have an initial state for the store
-const store = createStore(
-    reducer,
-    initialState,
-    compose(
-        responsiveStoreEnhancer,
-        applyMiddleware(middleware1, middleware2)
-    )
-)
-
-export default store
-```
-
-Now your store is ready to use. The store's default breakpoints match common device sizes and are accessible by the following names in your view:
-
-```js
+```ts
 const defaultBreakpoints = {
     extraSmall: 480,
     small: 768,
@@ -127,260 +82,212 @@ const defaultBreakpoints = {
 }
 ```
 
-# The Responsive State
+## The responsive state
 
-The `responsiveStateReducer` (and the reducer returned by `createResponsiveStateReducer`) adds an object with the following keys to the store:
+The reducer adds an object with the following keys to the store:
 
+- `mediaType` (_string_): the largest breakpoint category the viewport satisfies.
+- `orientation` (_`'portrait' | 'landscape' | null`_): the viewport orientation.
+- `lessThan` (_object_): whether the viewport is smaller than each breakpoint.
+- `greaterThan` (_object_): whether the viewport is larger than each breakpoint.
+- `is` (_object_): whether the viewport currently is each breakpoint.
+- `breakpoints` (_object_): the breakpoints, including the infinity media type.
 
-- `mediaType`: (*string*) The largest breakpoint category that the browser satisfies.
-- `orientation`: (*string*) The browser orientation. Has three possible values: "portrait", "landscape", or `null`.
-- `lessThan`: (*object*) An object of booleans that indicate whether the browser is currently less than a particular breakpoint.
-- `greaterThan`: (*object*) An object of booleans that indicate whether the browser is currently greater than a particular breakpoint.
-- `is`: (*object*) An object of booleans that indicate whether the browser is current that particular breakpoint.
+```ts
+const { browser } = store.getState()
 
-For example, if you put the responsive state under the key `browser` (as is done in the examples above) then you can access the browser's width and current media type, and determine if the browser is wider than the medium breakpoint like so
-
-```js
-// get the current state from the store
-const state = store.getState()
-
-// browser media type (e.g. "large")
-state.browser.mediaType
-// browser orientation (takes a null value on desktops)
-state.browser.orientation
-// true if browser width is greater than the "medium" breakpoint
-state.browser.greaterThan.medium
-// true if browser.mediaType === 'small'
-state.browser.is.small
+browser.mediaType // e.g. 'large'
+browser.orientation // 'landscape'
+browser.greaterThan.medium // true if wider than the "medium" breakpoint
+browser.is.small // true if browser.mediaType === 'small'
 ```
 
+All fields are fully typed: `browser.is.huge` is a type error unless `huge` is one of your breakpoints.
 
-## Using Custom Breakpoints
+## Custom breakpoints
 
-You can also create your own reducer based on custom breakpoints:
+```ts
+import { createResponsiveStateReducer } from '@mrcgrtz/redux-responsive'
 
-```js
-// reducer.js
+const browser = createResponsiveStateReducer({
+    extraSmall: 500,
+    small: 700,
+    medium: 1000,
+    large: 1280,
+    extraLarge: 1400,
+    // strings are used as custom media queries
+    print: 'print',
+})
+```
 
-import {combineReducers} from 'redux'
-import {createResponsiveStateReducer} from 'redux-responsive'
+### The infinity media type
 
-export default combineReducers({
-    browser: createResponsiveStateReducer({
-        extraSmall: 500,
-        small: 700,
-        medium: 1000,
-        large: 1280,
-        extraLarge: 1400,
+When the viewport is wider than the largest breakpoint, `mediaType` is `'infinity'`. To rename it, pass the `infinity` option:
+
+```ts
+// null uses the default breakpoints
+const browser = createResponsiveStateReducer(null, { infinity: 'veryBig' })
+```
+
+## Adding computed fields
+
+Pass an `extraFields` function to add fields to the responsive state whenever it is recalculated:
+
+```ts
+const browser = createResponsiveStateReducer(null, {
+    extraFields: ({ greaterThan, is }) => ({
+        greaterThanOrEqual: Object.fromEntries(
+            Object.entries(greaterThan).map(([mediaType, value]) => [
+                mediaType,
+                value || is[mediaType as keyof typeof is],
+            ])
+        ),
     }),
-})
-```
-
-
-
-### The Infinity Media Type
-
-When the browser is wider than the largest breakpoint, it's `mediaType` value is `infinity`. In order to
-change this value, add the `infinity` field to the object pass as a second argument to `createResponsiveStateReducer`:
-
-```es6
-// reducer.js
-
-import {combineReducers} from 'redux'
-import {createResponsiveStateReducer} from 'redux-responsive'
-
-export default combineReducers({
-    // passing null to the reducer factory uses the default breakpoints
-    browser: createResponsiveStateReducer(null, {
-        infinity: "veryBig"
-    })
-})
-```
-
-
-
-## Adding custom/computed fields to the responsive state
-
-In some cases, you may want to add computed fields to the responsive state. For example,
-an application may frequently need to know when the browser is `greaterThanOrEqual` to
-a particular breakpoint. In order to support this, `redux-responsive` lets you pass a
-function and to `createResponsiveStateReducer` arguments as the `extraFields` key.
-This function will recieve an object with the responsive state and returns an object
-with the new keys to be injected into the state whenever it is recalculated:
-
-```es6
-// reducer.js
-
-import {combineReducers} from 'redux'
-import {createResponsiveStateReducer} from 'redux-responsive'
-import {transform} from 'lodash'
-
-export default combineReducers({
-    browser: createResponsiveStateReducer(null, {
-        extraFields: ({ greaterThan, is }) => ({
-            // greaterThanOrEqual is built by transforming greaterThan
-            greaterThanOrEqual: transform(greaterThan, (result, value, mediaType) => {
-                // and combining the value with the `is` field
-                result[mediaType] = value || is[mediaType]
-            }, {})
-        }),
-    })
 })
 ```
 
 ### Tracking window attributes
 
-In some cases, you may want to have a `window` attributes tracked in your responsive state (for example, `width`).
-To accomplish this, the first step is to add the custom field as described above.
+To track attributes such as the width, read them in `extraFields`:
 
-```es6
-// reducer.js
-
-import {combineReducers} from 'redux'
-import {createResponsiveStateReducer} from 'redux-responsive'
-import {transform} from 'lodash'
-
-export default combineReducers({
-    browser: createResponsiveStateReducer(null, {
-        extraFields: () => ({
-            width: window.innerWidth
-        }),
-    })
+```ts
+const browser = createResponsiveStateReducer(null, {
+    extraFields: () => ({ width: window.innerWidth }),
 })
 ```
 
+The enhancer only recalculates when the viewport crosses a breakpoint, **not on every resize**. Request a recalculation yourself when you need one:
 
-When doing this, keep in mind that the responsive state enhancer only causes the
-responsive state to be recalculated when the browser actually transitions between
-states. **It does not recalculate on every resize**. Therefore, you might also need
-to add an event handler that recalculates the state at another time:
+```ts
+import { calculateResponsiveState } from '@mrcgrtz/redux-responsive'
 
-```es6
-// store.js
-
-import {calculateResponsiveState} from 'redux-responsive'
-
-const store = ...
-
-window.addEventListener('resize', () => store.dispatch(calculateResponsiveState(window)))
+window.addEventListener('resize', () => store.dispatch(calculateResponsiveState()))
 ```
 
+`calculateResponsiveState()` takes no window: the enhancer measures the window and attaches the result, so the action stays serializable.
 
-## Server-side Rendering
+## Server-side rendering
 
-Isomorphic applications must make sure that the sever-rendered markup matches the
-DOM rendered by the client. Setting the `calculateInitialState` option in the
-`createResponsiveStoreEnhancer` factory method to `false` tells the reducer
-to skip the initial responsive state calculation. The responsive state will
-contain the default values on both the server and the client side.
+Server-rendered markup must match the first client render. Disable the initial calculation so both use the default state:
 
-```js
-// store/configureStore.js
+```ts
+import { createResponsiveStoreEnhancer } from '@mrcgrtz/redux-responsive'
 
-import {createStore} from 'redux'
-import {createResponsiveStoreEnhancer} from 'redux-responsive'
-import reducer from './reducer'
-
-const store = createStore(
-                    reducer,
-                    createResponsiveStoreEnhancer({calculateInitialState: false}))
-
-export default store
+const enhancer = createResponsiveStoreEnhancer({ calculateInitialState: false })
 ```
 
-The application should explicitly dispatch the action to recalculate the responsive
-state when the application is rendered by the client.
+Then request the calculation once the client has hydrated:
 
+```tsx
+import { hydrateRoot } from 'react-dom/client'
+import { calculateResponsiveState } from '@mrcgrtz/redux-responsive'
 
-```jsx
-// client.js
-
-// external imports
-import ReactDOM from 'react-dom'
-import {calculateResponsiveState} from 'redux-responsive'
-// local imports
-import store from 'path/to/store'
-
-// render the application
-ReactDOM.render(
+hydrateRoot(
+    document.getElementById('app')!,
     <Provider store={store}>
-        // ...
-    </Provider>,
-    document.getElementById('app')
+        <App />
+    </Provider>
 )
 
-// calculate the initial state
-store.dispatch(calculateResponsiveState(window))
+store.dispatch(calculateResponsiveState())
 ```
 
 ### Setting the initial media type
 
-If you know the initial media type for your application (by doing something like looking at
-the user-agent) you can set the initial media type with the `initialMediaType` key to the
-reducer factory:
+If you know the initial media type (e.g. from the user agent), set it on the reducer:
 
-```es6
-const reducer = createResponsiveStateReducer(null, {initialMediaType: 'small'})
+```ts
+const browser = createResponsiveStateReducer(null, { initialMediaType: 'small' })
 ```
 
-## Higher-Order Components
+### Observing another window
 
-When building responsive applications in react, it's common to
-implement styles for each breakpoint and then apply them like so:
+The enhancer observes `globalThis.window` by default. Pass any object with a `matchMedia` method to observe something else, such as an iframe's window:
 
-```jsx
-const commonStyle = {...}
+```ts
+createResponsiveStoreEnhancer({ window: iframe.contentWindow })
+```
 
-const styles = {
-    element: {
-        ...commonStyle,
-        color: 'blue',
-    },
-    elementThin: {
-        ...commonStyle,
-        color: 'black',
-    }
-}
+## React bindings
 
-// somewhere in your component...
+Responsive styles often look like this:
 
+```tsx
 <div style={browser.lessThan.medium ? styles.elementThin : styles.element} />
 ```
 
-However this becomes very repetitive rather quickly. To help, redux-responsive
-provides a higher-order component for managing these styles. The `StyleSheet`
-higher-order component takes a function of two arguments, the current state of the
-responsive reducer, and any props passed to the component. The follow is
-equivalent to the logic above:
+`@mrcgrtz/redux-responsive/react` lets you declare overrides inside the style instead, using keys of the form `_lessThan_<mediaType>`, `_greaterThan_<mediaType>` and `_equal_<mediaType>`. Overrides apply in this order: `lessThan` (largest to smallest), `greaterThan` (smallest to largest), then `equal`.
 
-```jsx
-import {StyleSheet} from 'redux-responsive/react'
+### `useResponsiveStyles`
 
-const stylesheet = (browser, props) => ({
+```tsx
+import { useResponsiveStyles } from '@mrcgrtz/redux-responsive/react'
+
+const stylesheet = {
     element: {
         color: 'blue',
-        _lessThan_medium: {
-            color: 'black',
-        }
-    }
-})
+        _lessThan_medium: { color: 'black' },
+    },
+}
 
-const component = StyleSheet(stylesheet)(({styles}) => (
-    <div style={styles.element} />
-))
+function Component() {
+    const styles = useResponsiveStyles(stylesheet)
+    return <div style={styles.element} />
+}
 ```
 
+The stylesheet can also be a function of the responsive state and props:
+
+```tsx
+const styles = useResponsiveStyles(
+    (browser, props) => ({ element: { opacity: props.active ? 1 : 0.5 } }),
+    props
+)
+```
+
+If the responsive state is not stored under `browser`, pass a selector:
+
+```tsx
+useResponsiveStyles(stylesheet, undefined, {
+    selectResponsiveState: (state: RootState) => state.screen,
+})
+```
+
+### `StyleSheet` higher-order component
+
+For existing class components, the `StyleSheet` HOC passes the resolved styles as the `styles` prop:
+
+```tsx
+import { StyleSheet } from '@mrcgrtz/redux-responsive/react'
+
+const Component = StyleSheet(stylesheet)(({ styles }) => <div style={styles.element} />)
+
+// with a custom state key
+StyleSheet(stylesheet, { reducerName: 'screen' })
+```
 
 ## redux-immutable
-This library supports using [redux-immutable](https://www.npmjs.com/package/redux-immutable) to make the **root** of your state an Immutable.js Map or Record.
 
-However, transforming the branch of state managed by `redux-responsive` into Immutable data is not supported, because the `redux-responsive` reducer expects vanilla JS. Please keep this in mind if you're using SSR and transforming your state before hydrating.
+The root of your state may be an Immutable.js `Map` or `Record` (e.g. via [redux-immutable](https://www.npmjs.com/package/redux-immutable)). The branch of state managed by redux-responsive must stay plain JavaScript, so keep this in mind when transforming state before hydration.
 
 ## FAQ
 
-redux-responsive is returning the wrong breakpoint on mobile devices, what may be causing this?
-> This may be caused by not having the `<meta name="viewport">` tag in the head of your HTML. Adding this code may resolve your issue: `<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">`. Read more [here](https://developer.mozilla.org/en-US/docs/Mozilla/Mobile/Viewport_meta_tag) on how it works.
+**redux-responsive returns the wrong breakpoint on mobile devices. What may be causing this?**
+
+You are probably missing the viewport meta tag: `<meta name="viewport" content="width=device-width, initial-scale=1">`. Read more about it [on MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Viewport_meta_tag).
+
+## Development
+
+Requires Node 26 or newer.
+
+```sh
+npm install
+npm test           # run the tests (node:test, straight from the TypeScript sources)
+npm run check      # typecheck, lint, format check and tests
+npm run dev        # start the example app
+npm run build      # emit dist/
+```
 
 ## Versioning
 
-[Semver](http://semver.org/) is followed as closely as possible. For updates and migration instructions, see the [changelog](https://github.com/AlecAivazis/redux-responsive/wiki/Changelog).
+[Semver](https://semver.org/) is followed as closely as possible. See the [changelog](CHANGELOG.md) for updates and migration instructions.

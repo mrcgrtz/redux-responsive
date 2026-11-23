@@ -1,0 +1,21 @@
+version: 2
+updates:
+    # Maintain dependencies for Node
+    - package-ecosystem: 'npm'
+      directory: '/'
+      schedule:
+          interval: 'monthly'
+      assignees:
+          - 'mrcgrtz'
+      ignore:
+          # typescript-eslint supports TypeScript < 6.1 only
+          - dependency-name: 'typescript'
+            update-types: ['version-update:semver-major']
+
+    # Check for updates to GitHub Actions
+    - package-ecosystem: 'github-actions'
+      directory: '/'
+      schedule:
+          interval: 'daily'
+      assignees:
+          - 'mrcgrtz'
